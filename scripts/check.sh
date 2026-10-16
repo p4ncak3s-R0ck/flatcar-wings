@@ -5,6 +5,10 @@ cd "$base"
 shellcheck -x scripts/*.sh
 for script in scripts/*.sh; do bash -n "$script"; done
 python3 -m unittest discover -s tests -v
+shellcheck -x coreos/*.sh
+for script in coreos/*.sh; do bash -n "$script"; done
+python3 -m unittest discover -s coreos/tests -v
+python3 coreos/ignition/build.py --check
 for arch in amd64 arm64; do
  bash scripts/build.sh "$arch"
  python3 scripts/verify-image.py "$arch"
