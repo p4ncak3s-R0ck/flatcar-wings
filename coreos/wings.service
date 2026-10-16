@@ -1,0 +1,25 @@
+# Managed by coreos-wings
+[Unit]
+Description=Pterodactyl Wings on Fedora CoreOS
+Wants=network-online.target
+After=network-online.target docker.service
+Requires=docker.service
+PartOf=docker.service
+RequiresMountsFor=/var/opt/coreos-wings /var/lib/pterodactyl /var/lib/docker
+ConditionFileNotEmpty=/etc/pterodactyl/config.yml
+StartLimitIntervalSec=180
+StartLimitBurst=10
+
+[Service]
+Type=exec
+User=root
+WorkingDirectory=/etc/pterodactyl
+ExecStartPre=/usr/bin/bash /var/opt/coreos-wings/prepare.sh
+ExecStart=/var/opt/coreos-wings/bin/wings --config /etc/pterodactyl/config.yml
+Restart=on-failure
+RestartSec=5
+LimitNOFILE=65536
+TimeoutStopSec=120
+
+[Install]
+WantedBy=multi-user.target

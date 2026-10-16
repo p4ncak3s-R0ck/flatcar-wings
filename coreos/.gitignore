@@ -1,0 +1,5 @@
+__pycache__/
+*.pyc
+config.yml
+*.ign
+!ignition/online.ign
