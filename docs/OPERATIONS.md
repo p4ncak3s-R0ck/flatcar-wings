@@ -2,6 +2,14 @@
 
 ## Host requirements and installation
 
+Each release includes a standalone `install.sh`. Download it from Releases and
+run `sudo bash install.sh --config ./config.yml` with your Panel-generated node
+configuration. It downloads the matching architecture archive and checks the
+SHA-256 embedded in that release's script before executing the bundled installer.
+`bash install.sh --download-only ./downloads` saves the verified archive without
+changing the host. Release download URLs become available when the draft is
+published. The existing archive-based installation method is still supported.
+
 Use a current supported Flatcar release with its default Docker and containerd
 extensions enabled. Provision persistent game storage before installing Wings.
 The installer is for Flatcar only; it rejects other operating systems.
@@ -65,7 +73,7 @@ This extension does not drain games or manage Flatcar update policy.
 Build both images and run:
 
 ```bash
-make examples REPOSITORY=OWNER/REPO TAG=v0.1.0
+make examples REPOSITORY=OWNER/REPO TAG=v0.1.1
 ```
 
 The generated `dist/examples/flatcar-*.bu` fragments reference your GitHub
