@@ -1,0 +1,20 @@
+[Unit]
+Description=Provision Pterodactyl Wings from Ignition
+Wants=network-online.target
+After=network-online.target docker.service
+Requires=docker.service
+RequiresMountsFor=/var/opt/coreos-wings /var/lib/pterodactyl /var/lib/docker
+ConditionPathExists=!/var/opt/coreos-wings/.provisioned
+StartLimitIntervalSec=0
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/bin/bash /var/opt/coreos-wings/provisioning/install.sh
+ExecStartPost=/usr/bin/touch /var/opt/coreos-wings/.provisioned
+Restart=on-failure
+RestartSec=30
+TimeoutStartSec=15min
+
+[Install]
+WantedBy=multi-user.target
