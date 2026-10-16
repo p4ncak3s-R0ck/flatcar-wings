@@ -1,0 +1,15 @@
+# Merge into your full host provisioning (keep SSH access and storage mounts).
+# Install your private Panel-generated configuration separately after boot.
+variant: flatcar
+version: 1.0.0
+storage:
+  directories:
+    - path: /etc/pterodactyl
+      mode: 0700
+  files:
+    - path: /etc/extensions/wings.raw
+      mode: 0644
+      contents:
+        source: ${IMAGE_URL}
+        verification:
+          hash: sha256-${IMAGE_SHA256}

@@ -1,0 +1,23 @@
+name: Bug report
+description: Report an extension build or Flatcar integration problem.
+title: "bug: "
+body:
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Extension tag, Wings version, Flatcar version, architecture, and hosting platform.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction and expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs
+      description: Remove node tokens, authorization headers, private keys, and other credentials.
+      render: text

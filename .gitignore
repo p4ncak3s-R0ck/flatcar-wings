@@ -1,0 +1,15 @@
+/dist/
+/release/
+/upstream/
+/.venv/
+__pycache__/
+*.py[cod]
+*.raw
+*.tar.gz
+*.zip
+# Node credentials must remain outside source control.
+config.yml
+config.yaml
+*.key
+*.pem
+.env

@@ -1,0 +1,11 @@
+# OPTIONAL: merge into your provisioning if you want manual maintenance reboots.
+# Downloads/staging stay enabled; YOU must schedule reboots to apply OS patches.
+variant: flatcar
+version: 1.0.0
+storage:
+  files:
+    - path: /etc/flatcar/update.conf
+      mode: 0644
+      contents:
+        inline: |
+          REBOOT_STRATEGY="off"

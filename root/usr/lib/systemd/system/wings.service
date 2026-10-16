@@ -1,0 +1,26 @@
+[Unit]
+Description=Pterodactyl Wings
+Documentation=https://pterodactyl.io/wings/1.0/installing.html
+Wants=network-online.target
+After=network-online.target docker.service
+Requires=docker.service
+RequiresMountsFor=/var/lib/pterodactyl
+ConditionPathExists=/etc/pterodactyl/config.yml
+StartLimitIntervalSec=180
+StartLimitBurst=5
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/etc/pterodactyl
+ExecStartPre=/usr/bin/systemd-sysusers /usr/lib/sysusers.d/flatcar-wings.conf
+ExecStart=/usr/bin/wings --config /etc/pterodactyl/config.yml
+Restart=on-failure
+RestartSec=5s
+TimeoutStopSec=90s
+LimitNOFILE=65536
+StateDirectory=pterodactyl
+LogsDirectory=pterodactyl
+
+[Install]
+WantedBy=multi-user.target
