@@ -1,5 +1,21 @@
 # Flatcar Wings
 
+**Fedora CoreOS:** this branch also includes the native Wings installer in
+[`coreos/`](coreos/README.md). On a CoreOS host, download this branch and run:
+
+```bash
+curl -fL https://github.com/p4ncak3s-R0ck/flatcar-wings/archive/refs/heads/coreos.tar.gz -o flatcar-wings-coreos.tar.gz
+tar -xzf flatcar-wings-coreos.tar.gz
+cd flatcar-wings-coreos/coreos
+sudo bash install.sh
+```
+
+Follow the [CoreOS setup instructions](coreos/README.md) to add your Panel node
+configuration, TLS and firewall rules. The Flatcar extension instructions below
+apply to Flatcar hosts.
+
+For automated first boot, see the [CoreOS online Ignition profile](coreos/ignition/README.md).
+
 Run a **Pterodactyl Wings node on Flatcar Container Linux** using a systemd
 extension. Static upstream Wings binaries are overlaid into `/usr`; node
 credentials and game data stay on writable, persistent storage.
