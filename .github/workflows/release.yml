@@ -1,33 +1,52 @@
 name: Release
 on:
   push:
+    branches: [main]
     tags: ['v*']
+    paths: [VERSION]
+  workflow_dispatch:
 permissions:
   contents: read
 concurrency:
-  group: release-${{ github.ref }}
+  group: flatcar-wings-release
   cancel-in-progress: false
 jobs:
   build:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
+    outputs:
+      tag: ${{ steps.version.outputs.tag }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - name: Resolve release version
+        id: version
+        run: |
+          tag="v$(cat VERSION)"
+          if [[ ! "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo 'VERSION must contain MAJOR.MINOR.PATCH' >&2
+            exit 1
+          fi
+          if [[ "$GITHUB_REF" == refs/tags/* && "$GITHUB_REF_NAME" != "$tag" ]]; then
+            echo 'Tag must match VERSION' >&2
+            exit 1
+          fi
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
       - name: Install build dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y binutils curl make python3 shellcheck squashfs-tools
       - name: Lint, test, build and inspect both architectures
         run: make check
-      - name: Package matching tag and verify assets
+      - name: Package matching version and verify assets
         env:
           REPOSITORY: ${{ github.repository }}
-          TAG: ${{ github.ref_name }}
+          TAG: ${{ steps.version.outputs.tag }}
         run: |
           python3 scripts/package.py --repository "$REPOSITORY" --tag "$TAG"
           python3 tests/verify_release.py
+          shellcheck release/install.sh
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: release-assets
@@ -45,12 +64,28 @@ jobs:
         with:
           name: release-assets
           path: release/
-      - name: Create draft GitHub release
+      - name: Create or refresh the draft release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
-          TAG: ${{ github.ref_name }}
+          TAG: ${{ needs.build.outputs.tag }}
+          COMMIT_SHA: ${{ github.sha }}
         run: |
-          gh release create "$TAG" --repo "$GH_REPO" --verify-tag --draft \
-            --title "Flatcar Wings $TAG" --notes-file release/RELEASE-NOTES.md \
-            release/*.raw release/*.tar.gz release/*.bu release/SHA256SUMS
+          if tag_sha=$(gh api "repos/$GH_REPO/commits/$TAG" --jq .sha 2>/dev/null); then
+            if [[ "$tag_sha" != "$COMMIT_SHA" ]]; then
+              echo 'Existing version tag points to another commit; bump VERSION.' >&2
+              exit 1
+            fi
+          fi
+          if gh release view "$TAG" --repo "$GH_REPO" --json isDraft,targetCommitish > existing-release.json; then
+            if ! jq -e --arg sha "$COMMIT_SHA" '.isDraft == true and .targetCommitish == $sha' existing-release.json >/dev/null; then
+              echo 'Refusing to replace a published release or a draft from another commit; bump VERSION.' >&2
+              exit 1
+            fi
+          else
+            gh release create "$TAG" --repo "$GH_REPO" --target "$COMMIT_SHA" --draft \
+              --title "Flatcar Wings $TAG" --notes-file release/RELEASE-NOTES.md
+          fi
+          gh release upload "$TAG" --repo "$GH_REPO" --clobber \
+            release/install.sh release/*.raw release/*.tar.gz release/*.bu release/SHA256SUMS
+          echo "Draft release $TAG contains install.sh, both architecture builds, and checksums."

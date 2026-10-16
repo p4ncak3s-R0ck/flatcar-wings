@@ -29,6 +29,7 @@ jobs:
         run: |
           python3 scripts/package.py --repository "$REPOSITORY" --tag "v$(cat VERSION)"
           python3 tests/verify_release.py
+          shellcheck release/install.sh
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: flatcar-wings-build
