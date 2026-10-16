@@ -15,22 +15,32 @@ supported OS list. A Pterodactyl Panel must already exist.
 
 ## Install a release
 
-From this repository's **Releases** page, download the installer archive for
-your host: `flatcar-wings-vVERSION-amd64.tar.gz` or
-`flatcar-wings-vVERSION-arm64.tar.gz`. Extract it and enter `flatcar-wings/`.
-In your Panel, create a node and save its Configuration YAML as `config.yml`.
-Then run on the Flatcar host:
+From this repository's **Releases** page, download **install.sh**. Save the
+Panel-generated node Configuration YAML as `config.yml`, then run on Flatcar:
 
 ```bash
-sudo bash scripts/install.sh --config ./config.yml
+sudo bash install.sh --config ./config.yml
 sudo journalctl -u wings -f
 ```
+
+The script detects AMD64/ARM64, downloads its matching release archive, verifies
+a SHA-256 pinned into the script, and runs the bundled installer. It supports
+`--replace` and `--no-start`. To fetch the verified archive on another Linux
+machine without installing:
+
+```bash
+bash install.sh --download-only ./downloads
+```
+
+Alternatively, download `flatcar-wings-vVERSION-amd64.tar.gz` or
+`flatcar-wings-vVERSION-arm64.tar.gz` from Releases. Extract it, enter
+`flatcar-wings/`, and run `sudo bash scripts/install.sh --config ./config.yml`.
 
 The release installer includes a prebuilt image. No compiler or package manager
 is needed on the Flatcar machine. Installation without starting Wings:
 
 ```bash
-sudo bash scripts/install.sh --no-start
+sudo bash install.sh --no-start
 sudo install -m 0600 ./config.yml /etc/pterodactyl/config.yml
 sudo systemctl start wings.service
 ```
@@ -78,6 +88,7 @@ make package REPOSITORY=YOUR-USERNAME/flatcar-wings
 
 | Asset | Use |
 |---|---|
+| `install.sh` | Standalone architecture-detecting installer with pinned archive hashes |
 | `flatcar-wings-vVERSION-ARCH.tar.gz` | Installer bundle for one architecture |
 | `wings-ARCH.raw` | Standalone image; install as `/etc/extensions/wings.raw` |
 | `flatcar-ARCH.bu` | Provisioning fragment with a release URL and actual image hash |
@@ -102,14 +113,18 @@ git push -u origin main
 ```
 
 The CI workflow runs on pushes, pull requests, and manual dispatch. The release
-workflow runs when you push a `vMAJOR.MINOR.PATCH` tag matching `VERSION`:
+workflow runs when you change `VERSION` on `main`, push a matching
+`vMAJOR.MINOR.PATCH` tag, or use **Actions → Release → Run workflow**.
+A version bump on `main` needs no separate tag command. For a tag release:
 
 ```bash
-git tag v0.1.0
-git push origin v0.1.0
+git tag v0.1.1
+git push origin v0.1.1
 ```
 
-After successful checks, it creates a **draft release** with all assets. Review
+After successful checks, it creates a **draft release** with `install.sh` and
+both architecture builds. Rerunning the same commit refreshes its draft assets;
+published releases and drafts from different commits are not overwritten. Review
 and publish the draft in GitHub. No personal access token is required; the
 publish job uses the repository-scoped `GITHUB_TOKEN` with `contents: write`.
 Repository/organization policy must permit the configured GitHub Actions.
